@@ -1,5 +1,5 @@
 #!/usr/bin/python
-from mapnik2 import *
+from mapnik import *
 from osgeo import ogr
 import sys, os, threading, time, math, argparse
 from Queue import *
@@ -37,7 +37,7 @@ class TileParams:
         return inExtractArea.Intersect(self.TileGeometry)
 
 class ThreadedTileGenerator(threading.Thread):
-    def __init__(self, inQueue, inThreadnum, inBasedir, inProjection, inMapnikconfig, inExtractAreaGeom, inFullClipBelowZoom):
+    def __init__(self, inQueue, inThreadnum, inBasedir, inProjection, inMapnikconfig, inExtractAreaGeom, inFullClipBelowZoom, inFlatDirectoryStructure):
         threading.Thread.__init__(self)
         self.queue = inQueue
         self.threadnum = inThreadnum
@@ -46,6 +46,7 @@ class ThreadedTileGenerator(threading.Thread):
         self.mapnikconfig = inMapnikconfig
         self.extractAreaGeom = inExtractAreaGeom
         self.fullClipBelowZoom = inFullClipBelowZoom
+        self.flatDirectoryStructure = inFlatDirectoryStructure
 
     def run(self):
         while True:
@@ -60,7 +61,12 @@ class ThreadedTileGenerator(threading.Thread):
 
     def DrawMap(self, params):
 
-        filename = self.basedir + "/" + str(params.GetZoom()) + "/" + str(params.GetMinX()).zfill(params.GetPad()) + "/" + str(params.GetMinY()).zfill(params.GetPad()) + ".png"
+        if self.flatDirectoryStructure:
+            xySeparator = "_"
+        else:
+            xySeparator = "/"
+
+        filename = self.basedir + "/" + str(params.GetZoom()) + "/" + str(params.GetMinX()).zfill(params.GetPad()) + xySeparator + str(params.GetMinY()).zfill(params.GetPad()) + ".png"
 
         # Create a bounding box for this tile so we can figure out if we should render it
         if params.GetZoom() > self.fullClipBelowZoom and not(params.IntersectsArea(extractAreaGeom)):
@@ -72,7 +78,7 @@ class ThreadedTileGenerator(threading.Thread):
 
             m = Map(params.GetTileSize(),params.GetTileSize(),self.projection)
             load_map(m,self.mapnikconfig)
-            bbox = Envelope(params.GetMinX(),params.GetMinY(),params.GetMaxX(),params.GetMaxY())
+            bbox = Box2d(params.GetMinX(),params.GetMinY(),params.GetMaxX(),params.GetMaxY())
             m.zoom_to_box(bbox)
 
             # This prevents labels being drawn on the boundary of the tiles
@@ -93,7 +99,6 @@ class ThreadedTileGenerator(threading.Thread):
         # Prefix all log messages with the thread number and current queue size
         print "[t" + str(self.threadnum) + ", q" + str(self.queue.qsize()) + "] " + message
 
-
 parser = argparse.ArgumentParser(description='A script to generate OSM tiles in a specific coordinate system')
 
 parser.add_argument("projection", help="The Proj4 projection to use")
@@ -105,29 +110,47 @@ parser.add_argument("--fullClipBelowZoom", type=int, default=-1, help="If specif
 parser.add_argument("--paddigits", type=int, default=8, help="The number of digits to pad coordinates written to file and directory names")
 parser.add_argument("--imgsize", type=int, default=500, help="The resulting image size in pixels")
 parser.add_argument("--basedir", help="The base directory to generate the tiles into")
+parser.add_argument("--mincoordx", type=int, help="The x coordinate to start generating tiles from in the destination coordinate system. If not specified, will be inferred from the extent of the polygon extract region")
+parser.add_argument("--mincoordy", type=int, help="The y coordinate to start generating tiles from in the destination coordinate system. If not specified, will be inferred from the extent of the polygon extract region")
+parser.add_argument("--maxcoordx", type=int, help="The x coordinate to end generating tiles from in the destination coordinate system. If not specified, will be inferred from the extent of the polygon extract region")
+parser.add_argument("--maxcoordy", type=int, help="The y coordinate to end generating tiles from in the destination coordinate system. If not specified, will be inferred from the extent of the polygon extract region")
+parser.add_argument("--coordsincrementx", type=int, default=-1, help="The x coordinate increment to use. If not specified, will be inferred from the extent of the polygon extract region divided by the square of the zoom level (so zoom 0 is the full extent, 1 is divided into half in both direction etc")
+parser.add_argument("--coordsincrementy", type=int, default=-1, help="The y coordinate increment to use. If not specified, will be inferred from the extent of the polygon extract region divided by the square of the zoom level (so zoom 0 is the full extent, 1 is divided into half in both direction etc")
+parser.add_argument("--flatdirectorystructure", action='store_true', help="Whether to generate the tiles in a flat directory or use the x coordinate to split them into seperate directories")
 
 args = parser.parse_args()
 
-extractAreaGeom = ogr.CreateGeometryFromWkt(args.extractarea)
-extractAreaEnvelope = extractAreaGeom.GetEnvelope()
-
-mincoords = (int(extractAreaEnvelope[0]), int(extractAreaEnvelope[2]))
-maxcoords = (int(extractAreaEnvelope[1])+1, int(extractAreaEnvelope[3])+1)
 projection = args.projection
 mapnikconfig = args.mapnikconfig
 imgsize = args.imgsize
 paddigits = args.paddigits
-zoomlevels = args.zoomlevels
 numthreads = args.threads
 maxQueueSize = 500000
 fullClipBelowZoom = args.fullClipBelowZoom
+extractAreaGeom = ogr.CreateGeometryFromWkt(args.extractarea)
+coordsincrementx = args.coordsincrementx
+coordsincrementy = args.coordsincrementy
+flatDirectoryStructure = args.flatdirectorystructure
+
+if args.mincoordx is not None and args.mincoordy is not None and args.maxcoordx is not None and args.maxcoordy is not None:
+    print "Using min and max coordinates from arguments"
+    mincoords = args.mincoordx, args.mincoordy
+    maxcoords = args.maxcoordx, args.maxcoordy
+else:
+    print "Deriving min and max coordinates from extract area extent"
+    extractAreaEnvelope = extractAreaGeom.GetEnvelope()
+    mincoords = (int(extractAreaEnvelope[0]), int(extractAreaEnvelope[2]))
+    maxcoords = (int(extractAreaEnvelope[1])+1, int(extractAreaEnvelope[3])+1)
 
 if args.basedir is not None:
     basedir = args.basedir
 else:
     basedir = ""
 
-for zoom in zoomlevels:
+# A queue to put tiles in for rendering on threads
+queue = Queue()
+
+for zoom in args.zoomlevels:
 
     print "About to render zoom level: " + str(zoom)
 
@@ -135,18 +158,21 @@ for zoom in zoomlevels:
 
     print "Max tile size: " + str(maxtilesize)
 
-    xcoordsincrement = maxtilesize / math.pow(2, zoom)
-    ycoordsincrement = xcoordsincrement
+    if coordsincrementx != -1 and coordsincrementy != -1:
+        xcoordsincrement = coordsincrementx
+        ycoordsincrement = coordsincrementy
+    else:
+        xcoordsincrement = maxtilesize / math.pow(2, zoom)
+        ycoordsincrement = xcoordsincrement
 
     print "Coordinate increment for zoom level " + str(zoom) + " is " + str(xcoordsincrement)
 
     x = mincoords[0]
     y = mincoords[1]
 
-    queue = Queue()
 
     for i in range(numthreads):
-        t = ThreadedTileGenerator(queue, i, basedir, projection, mapnikconfig, extractAreaGeom, fullClipBelowZoom)
+        t = ThreadedTileGenerator(queue, i, basedir, projection, mapnikconfig, extractAreaGeom, fullClipBelowZoom, flatDirectoryStructure)
         t.daemon = True
         t.start()
 
