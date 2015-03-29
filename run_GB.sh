@@ -6,6 +6,11 @@ extentWKT27700m="POLYGON ((61624 -83, 52313 22770, 91250 47318, 136959 62977, 16
 basedir=OS
 threads=4
 
-#./Generate250kTiles.py --threads ${threads} --basedir ${basedir} --imgsize 4000 "${projection27700m}" ${mapnikconfig} "${extentWKT27700m}"
-./Generate50kTiles.py --threads ${threads} --basedir ${basedir} --imgsize 4000 "${projection27700m}" ${mapnikconfig} "${extentWKT27700m}"
-#./Generate10kTiles.py --threads ${threads} --basedir ${basedir} --imgsize 5000 "${projection27700m}" ${mapnikconfig} "${extentWKT27700m}"
+# Something which looks like OS250K tiles
+./GenerateTiles.py --threads ${threads} --basedir ${basedir} --imgsize 4000 --flatdirectorystructure --mincoordx 0 --mincoordy 0 --maxcoordx 800000 --maxcoordy 1300000 --coordsincrementx 100000 --coordsincrementy 100000 "${projection27700m}" ${mapnikconfig} "${extentWKT27700m}" 250
+
+# Something which looks like OS50K tiles
+./GenerateTiles.py --threads ${threads} --basedir ${basedir} --imgsize 4000 --flatdirectorystructure --mincoordx 0 --mincoordy 0 --maxcoordx 800000 --maxcoordy 1300000 --coordsincrementx 20000 --coordsincrementy 20000 "${projection27700m}" ${mapnikconfig} "${extentWKT27700m}" 50
+
+# Something which looks like OS10K tiles
+./GenerateTiles.py --threads ${threads} --basedir ${basedir} --imgsize 4000 --flatdirectorystructure --mincoordx 0 --mincoordy 0 --maxcoordx 800000 --maxcoordy 1300000 --coordsincrementx 5000 --coordsincrementy 5000 "${projection27700m}" ${mapnikconfig} "${extentWKT27700m}" 10
