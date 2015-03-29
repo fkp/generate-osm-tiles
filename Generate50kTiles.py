@@ -155,4 +155,3 @@ while (y < maxcoords[1]):
 queue.join()
 
 
-
