@@ -37,7 +37,7 @@ class TileParams:
         return inExtractArea.Intersect(self.TileGeometry)
 
 class ThreadedTileGenerator(threading.Thread):
-    def __init__(self, inQueue, inThreadnum, inBasedir, inProjection, inMapnikconfig, inExtractAreaGeom, inFullClipBelowZoom, inFlatDirectoryStructure):
+    def __init__(self, inQueue, inThreadnum, inBasedir, inProjection, inMapnikconfig, inExtractAreaGeom, inFullClipBelowZoom, inFlatDirectoryStructure, inScale):
         threading.Thread.__init__(self)
         self.queue = inQueue
         self.threadnum = inThreadnum
@@ -47,6 +47,7 @@ class ThreadedTileGenerator(threading.Thread):
         self.extractAreaGeom = inExtractAreaGeom
         self.fullClipBelowZoom = inFullClipBelowZoom
         self.flatDirectoryStructure = inFlatDirectoryStructure
+        self.scale = inScale
 
     def run(self):
         while True:
@@ -85,7 +86,7 @@ class ThreadedTileGenerator(threading.Thread):
             m.buffer_size = params.GetTileSize() / 2
 
             im = Image(params.GetTileSize(),params.GetTileSize())
-            render(m, im)
+            render(m, im, self.scale)
             # x,y,width,height
             view = im.view(0,0,params.GetTileSize(),params.GetTileSize()) 
 
@@ -117,6 +118,7 @@ parser.add_argument("--maxcoordy", type=int, help="The y coordinate to end gener
 parser.add_argument("--coordsincrementx", type=int, default=-1, help="The x coordinate increment to use. If not specified, will be inferred from the extent of the polygon extract region divided by the square of the zoom level (so zoom 0 is the full extent, 1 is divided into half in both direction etc")
 parser.add_argument("--coordsincrementy", type=int, default=-1, help="The y coordinate increment to use. If not specified, will be inferred from the extent of the polygon extract region divided by the square of the zoom level (so zoom 0 is the full extent, 1 is divided into half in both direction etc")
 parser.add_argument("--flatdirectorystructure", action='store_true', help="Whether to generate the tiles in a flat directory or use the x coordinate to split them into seperate directories")
+parser.add_argument("--scale", type=int, default=1, help="How much to scale the rendering of the data. The OSM style sheet works for Global Mercator but for other projections you may have to scale this up a little to avoid having too much detail in the tiles generated")
 
 args = parser.parse_args()
 
@@ -131,6 +133,7 @@ extractAreaGeom = ogr.CreateGeometryFromWkt(args.extractarea)
 coordsincrementx = args.coordsincrementx
 coordsincrementy = args.coordsincrementy
 flatDirectoryStructure = args.flatdirectorystructure
+scale = args.scale
 
 if args.mincoordx is not None and args.mincoordy is not None and args.maxcoordx is not None and args.maxcoordy is not None:
     print "Using min and max coordinates from arguments"
@@ -172,7 +175,7 @@ for zoom in args.zoomlevels:
 
 
     for i in range(numthreads):
-        t = ThreadedTileGenerator(queue, i, basedir, projection, mapnikconfig, extractAreaGeom, fullClipBelowZoom, flatDirectoryStructure)
+        t = ThreadedTileGenerator(queue, i, basedir, projection, mapnikconfig, extractAreaGeom, fullClipBelowZoom, flatDirectoryStructure, scale)
         t.daemon = True
         t.start()
 
