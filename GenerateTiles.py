@@ -86,7 +86,6 @@ class ThreadedTileGenerator(threading.Thread):
 
             # This prevents labels being drawn on the boundary of the tiles
             m.buffer_size = ( params.GetTileSize() / 2 )
-            self.Log("Using buffer size: " + str(m.buffer_size))
 
             im = Image(params.GetTileSize(),params.GetTileSize())
             render(m, im, self.scale)
