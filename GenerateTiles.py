@@ -85,7 +85,8 @@ class ThreadedTileGenerator(threading.Thread):
             m.zoom_to_box(bbox)
 
             # This prevents labels being drawn on the boundary of the tiles
-            m.buffer_size = ( params.GetTileSize() / 2 )
+            m.buffer_size = 0
+            #m.buffer_size = ( params.GetTileSize() / 2 )
 
             im = Image(params.GetTileSize(),params.GetTileSize())
             render(m, im, self.scale)
