@@ -6,6 +6,5 @@ extentWKT2260ft="POLYGON ((389169 888586, 370071 921572, 379620 934593, 369203 9
 basedir=US
 threads=4
 
-./GenerateTiles.py --threads ${threads} --basedir ${basedir} --imgsize 4000 --scale 1 "${projection2260ft}" ${mapnikconfig} "${extentWKT2260ft}" 0 1
-#./GenerateTiles.py --threads ${threads} --basedir ${basedir} --imgsize 4000 --scale 1 "${projection2260ft}" ${mapnikconfig} "${extentWKT2260ft}" 0 1 2 3 4 5 6 7 8 9 10
+./GenerateTiles.py --threads ${threads} --basedir ${basedir} --imgsize 4000 --scale 1 "${projection2260ft}" ${mapnikconfig} "${extentWKT2260ft}" 0 1 2 3 4 5 6 7 8 9 10
 
