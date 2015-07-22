@@ -16,7 +16,7 @@ def ReplaceElementMtoFt(inRoot, inElementName):
     meters = int(elem.text)
     if not(meters in replacements):
       feet = int(meters * 3.2808399)
-      print ":%s/ScaleDenominator>" + str(meters) + "/" + "ScaleDenominator>" + str(feet) + "/g"
+      print ":%s/ScaleDenominator>" + str(meters) + "</" + "ScaleDenominator>" + str(feet) + "</g"
       replacements[meters] = 1
       #elem.text = str(feet)
 
