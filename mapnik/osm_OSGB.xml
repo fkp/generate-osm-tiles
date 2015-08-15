@@ -68,16 +68,15 @@
 </FontSet>
 <Style name="world" filter-mode="first">
   <Rule>
-    <MaxScaleDenominator>60000000</MaxScaleDenominator>
-    <MinScaleDenominator>0</MinScaleDenominator>
+    <MinScaleDenominator>750000</MinScaleDenominator>
     <PolygonSymbolizer fill="#f2efe9" />
   </Rule>
 </Style>
 <Layer name="world"
-  srs="+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.999601 +x_0=400000 +y_0=-100000 +ellps=airy  +units=m +towgs84=446.448,-125.157,542.060,0.1502,0.2470,0.8421,-20.4894 +units=m +nodefs">
+  srs="+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0.0 +k=1.0 +units=m +nadgrids=@null +wktext +no_defs +over">
     <StyleName>world</StyleName>
     <Datasource>
-       <Parameter name="file"><![CDATA[data/simplified-land-polygons-complete-3857/simplified_land_polygons_27700m.shp]]></Parameter>
+       <Parameter name="file"><![CDATA[data/simplified-land-polygons-complete-3857/simplified_land_polygons.shp]]></Parameter>
        <Parameter name="type"><![CDATA[shape]]></Parameter>
     </Datasource>
   </Layer>
@@ -89,10 +88,10 @@
   </Rule>
 </Style>
 <Layer name="coast-poly"
-  srs="+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.999601 +x_0=400000 +y_0=-100000 +ellps=airy  +units=m +towgs84=446.448,-125.157,542.060,0.1502,0.2470,0.8421,-20.4894 +units=m +nodefs">
+  srs="+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0.0 +k=1.0 +units=m +nadgrids=@null +wktext +no_defs +over">
     <StyleName>coast-poly</StyleName>
     <Datasource>
-       <Parameter name="file"><![CDATA[data/land-polygons-split-3857/land_polygons_27700m.shp]]></Parameter>
+       <Parameter name="file"><![CDATA[data/land-polygons-split-3857/land_polygons.shp]]></Parameter>
        <Parameter name="type"><![CDATA[shape]]></Parameter>
     </Datasource>
   </Layer>
@@ -105,10 +104,10 @@
   </Rule>
 </Style>
 <Layer name="builtup"
-  srs="+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.999601 +x_0=400000 +y_0=-100000 +ellps=airy  +units=m +towgs84=446.448,-125.157,542.060,0.1502,0.2470,0.8421,-20.4894 +units=m +nodefs">
+  srs="+proj=merc +datum=WGS84 +over">
     <StyleName>builtup</StyleName>
     <Datasource>
-       <Parameter name="file"><![CDATA[data/world_boundaries/builtup_area_27700m.shp]]></Parameter>
+       <Parameter name="file"><![CDATA[data/world_boundaries/builtup_area.shp]]></Parameter>
        <Parameter name="type"><![CDATA[shape]]></Parameter>
     </Datasource>
   </Layer>
@@ -121,10 +120,10 @@
   </Rule>
 </Style>
 <Layer name="necountries"
-  srs="+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.999601 +x_0=400000 +y_0=-100000 +ellps=airy  +units=m +towgs84=446.448,-125.157,542.060,0.1502,0.2470,0.8421,-20.4894 +units=m +nodefs">
+  srs="+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs">
     <StyleName>necountries</StyleName>
     <Datasource>
-       <Parameter name="file"><![CDATA[data/ne_110m_admin_0_boundary_lines_land/ne_110m_admin_0_boundary_lines_land_27700m.shp]]></Parameter>
+       <Parameter name="file"><![CDATA[data/ne_110m_admin_0_boundary_lines_land/ne_110m_admin_0_boundary_lines_land.shp]]></Parameter>
        <Parameter name="type"><![CDATA[shape]]></Parameter>
     </Datasource>
   </Layer>
@@ -11374,10 +11373,10 @@ case when leisure='pitch' then 2
   </Rule>
 </Style>
 <Layer name="nepopulated"
-  srs="+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.999601 +x_0=400000 +y_0=-100000 +ellps=airy  +units=m +towgs84=446.448,-125.157,542.060,0.1502,0.2470,0.8421,-20.4894 +units=m +nodefs">
+  srs="+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs">
     <StyleName>nepopulated</StyleName>
     <Datasource>
-       <Parameter name="file"><![CDATA[data/ne_10m_populated_places/ne_10m_populated_places_fixed_27700m.shp]]></Parameter>
+       <Parameter name="file"><![CDATA[data/ne_10m_populated_places/ne_10m_populated_places_fixed.shp]]></Parameter>
        <Parameter name="type"><![CDATA[shape]]></Parameter>
        <Parameter name="encoding"><![CDATA[windows-1252]]></Parameter>
     </Datasource>
