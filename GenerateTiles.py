@@ -159,11 +159,9 @@ try:
 
     for zoom in args.zoomlevels:
 
-        print "About to render zoom level: " + str(zoom)
-
         maxtilesize = max(maxcoords[0] - mincoords[0], maxcoords[1] - mincoords[1])
+        print "About to render zoom level: " + str(zoom) + " max tile size: " + str(maxtilesize)
 
-        print "Max tile size: " + str(maxtilesize)
 
         if coordsincrementx != -1 and coordsincrementy != -1:
             xcoordsincrement = coordsincrementx
