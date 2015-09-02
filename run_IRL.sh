@@ -1,8 +1,8 @@
-projection29901m="+proj=tmerc +lat_0=53.5 +lon_0=-8 +k=1 +x_0=200000 +y_0=250000 +ellps=airy +towgs84=482.5,-130.6,564.6,-1.042,-0.214,-0.631,8.15 +units=m +no_defs "
+projection29902m="+proj=tmerc +lat_0=53.5 +lon_0=-8 +k=1.000035 +x_0=200000 +y_0=250000 +a=6377340.189 +b=6356034.447938534 +units=m +no_defs "
 mapnikconfig="/etc/mapnik-osm-carto-data/osm_OSI.xml"
 
 # These coordinates can clip out areas we are not interested in
-extentWKT29901m="POLYGON ((0 0, 700000 0, 700000 1300000, 0 1300000, 0 0))"
+extentWKT29902m="POLYGON((457620.606280015 1257868.13463411,393329.267610771 1232151.59916641,372756.039236613 1165288.6069504,370184.385689843 1095853.96118761,308464.700567369 1067565.77217314,275033.204459362 1010989.39414421,205598.558696578 1000702.77995713,118162.338106406 1003274.4335039,56442.6529839318 969842.937395894,17867.8497823854 890121.677446031,17867.8497823854 789827.18912201,35869.4246097736 730679.157546306,69300.9207177807 648386.244049673,-48157.7121006604 600724.128272592,-166718.47588037 531435.370219515,-212910.981249088 163435.077448728,5733.54416284384 217326.333712232,110436.556331938 235803.335859719,172026.563490229 437510.609303121,275033.204459362 422080.731933934,206241.472083271 406007.897266623,188239.897255882 327572.464090145,229386.354004199 294140.967982138,203669.818536501 264566.952194286,136806.826320487 252994.511233822,132949.346000332 198989.786751657,188239.897255882 162986.63709688,237101.314644508 164272.463870265,183096.590162343 134698.448082412,157380.054694645 88408.6842405567,126520.212133408 52405.53458578,62228.8734641638 34403.9597583916,62228.8734641638 2258.2904237695,99517.8498923254 -10599.9773100793,243530.448511432 11259.0778374637,339967.456515298 36975.6133051614,611276.905699509 75550.4165067078,674282.417595368 162986.63709688,644708.401807516 200275.613525041,696141.472742911 299284.275075677,667853.283728444 353288.999557843,612562.732472894 379005.53502554,576559.582818117 389292.149212619,539270.606389955 499873.251723719,478836.748040866 557735.456526039,437690.29129255 659315.771623445,402972.968411158 704319.708691916,392686.354224079 737751.204799923,445405.251932859 861190.575044871,424832.023558701 889478.764059339,377256.43294346 897193.724699648,321965.88168791 886907.110512569,460835.173213477 1086210.26038723,501981.629961794 1136357.50454924,503267.456735179 1198077.18967171,494266.669321484 1239223.64642003,457620.606280015 1257868.13463411))"
 basedir=OSI
 threads=3
 mincoordx=0
@@ -11,14 +11,14 @@ maxcoordx=400000
 maxcoordy=500000
 
 # Something which looks like a map of Ireland
-./GenerateTiles.py --threads ${threads} --basedir ${basedir} --imgsize 4000 --flatdirectorystructure --scale 2 --mincoordx ${mincoordx} --mincoordy ${mincoordy} --maxcoordx ${maxcoordx} --maxcoordy ${maxcoordy} --coordsincrementx ${maxcoordx} --coordsincrementy ${maxcoordy} "${projection29901m}" ${mapnikconfig} "${extentWKT29901m}" 1000
+./GenerateTiles.py --threads ${threads} --basedir ${basedir} --imgsize 4000 --flatdirectorystructure --scale 2 --mincoordx ${mincoordx} --mincoordy ${mincoordy} --maxcoordx ${maxcoordx} --maxcoordy ${maxcoordy} --coordsincrementx ${maxcoordx} --coordsincrementy ${maxcoordy} "${projection29902m}" ${mapnikconfig} "${extentWKT29902m}" 1000
 
 # Something which looks like OS250K tiles
-./GenerateTiles.py --threads ${threads} --basedir ${basedir} --imgsize 4000 --flatdirectorystructure --scale 2 --mincoordx ${mincoordx} --mincoordy ${mincoordy} --maxcoordx ${maxcoordx} --maxcoordy ${maxcoordy} --coordsincrementx 100000 --coordsincrementy 100000 "${projection29901m}" ${mapnikconfig} "${extentWKT29901m}" 250
+#./GenerateTiles.py --threads ${threads} --basedir ${basedir} --imgsize 4000 --flatdirectorystructure --scale 2 --mincoordx ${mincoordx} --mincoordy ${mincoordy} --maxcoordx ${maxcoordx} --maxcoordy ${maxcoordy} --coordsincrementx 100000 --coordsincrementy 100000 "${projection29902m}" ${mapnikconfig} "${extentWKT29902m}" 250
 
 # Something which looks like OS50K tiles
-#./GenerateTiles.py --threads ${threads} --basedir ${basedir} --imgsize 4000 --flatdirectorystructure --scale 2 --mincoordx ${mincoordx} --mincoordy ${mincoordy} --maxcoordx ${maxcoordx} --maxcoordy ${maxcoordy} --coordsincrementx 20000 --coordsincrementy 20000 "${projection29901m}" ${mapnikconfig} "${extentWKT29901m}" 50
+#./GenerateTiles.py --threads ${threads} --basedir ${basedir} --imgsize 4000 --flatdirectorystructure --scale 2 --mincoordx ${mincoordx} --mincoordy ${mincoordy} --maxcoordx ${maxcoordx} --maxcoordy ${maxcoordy} --coordsincrementx 20000 --coordsincrementy 20000 "${projection29902m}" ${mapnikconfig} "${extentWKT29902m}" 50
 
 # Something which looks like OS10K tiles
-#./GenerateTiles.py --threads ${threads} --basedir ${basedir} --imgsize 4000 --flatdirectorystructure --scale 2 --mincoordx ${mincoordx} --mincoordy ${mincoordy} --maxcoordx ${maxcoordx} --maxcoordy ${maxcoordy} --coordsincrementx 5000 --coordsincrementy 5000 "${projection29901m}" ${mapnikconfig} "${extentWKT29901m}" 10
+#./GenerateTiles.py --threads ${threads} --basedir ${basedir} --imgsize 4000 --flatdirectorystructure --scale 2 --mincoordx ${mincoordx} --mincoordy ${mincoordy} --maxcoordx ${maxcoordx} --maxcoordy ${maxcoordy} --coordsincrementx 5000 --coordsincrementy 5000 "${projection29902m}" ${mapnikconfig} "${extentWKT29902m}" 10
 
