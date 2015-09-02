@@ -54,7 +54,7 @@ do
 
   echo Converting: $file
 
-  ogr2ogr -f "ESRI Shapefile" -s_srs EPSG:3857 -t_srs "${proj4}" \
+  ogr2ogr -f "ESRI Shapefile" -t_srs "${proj4}" \
      -clipsrc ${extent} ${destinationFullPath} ${fullPath}
   
 done
