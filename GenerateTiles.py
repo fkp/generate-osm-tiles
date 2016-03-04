@@ -1,7 +1,7 @@
 #!/usr/bin/python
 from mapnik import *
 from osgeo import ogr
-import sys, os, threading, time, math, argparse
+import sys, os, threading, time, math, argparse, multiprocessing
 from Queue import *
 
 shutdownRequested = False
@@ -59,7 +59,7 @@ class ThreadedTileGenerator(threading.Thread):
 
             self.DrawMap(item)
 
-            # Mark the item we have taken off the queue as done - not sure how python marries this up with the item taken above, but seems to work just fine and this is how all the documentation suggests this should be done
+            # Mark the item we have taken off the queue as done so the thread will become available to accept new items
             self.queue.task_done()
 
     def DrawMap(self, params):
@@ -110,7 +110,8 @@ try:
     parser.add_argument("mapnikconfig", help="The mapnik config file to be used for the rendering")
     parser.add_argument("extractarea", help="The extract area as a WKT polygon (coordinates in the destination coordinate system)")
     parser.add_argument("zoomlevels", type=int, nargs='+', help="The zoom levels to render")
-    parser.add_argument("--threads", type=int, default=2, help="The number of threads to start rendering with")
+    # Note that if you don't specify the threads, we'll start as many are on the current host
+    parser.add_argument("--threads", type=int, default=multiprocessing.cpu_count(), help="The number of threads to start rendering with")
     parser.add_argument("--fullClipBelowZoom", type=int, default=-1, help="If specified, the script will only perform a full clip based on the extract polygon below this zoom level, so zoom levels above this will receive the whole extent of the extract region")
     parser.add_argument("--paddigits", type=int, default=8, help="The number of digits to pad coordinates written to file and directory names")
     parser.add_argument("--imgsize", type=int, default=500, help="The resulting image size in pixels")
@@ -138,6 +139,8 @@ try:
     coordsincrementy = args.coordsincrementy
     flatDirectoryStructure = args.flatdirectorystructure
     scale = args.scale
+
+    print "Using " + str(numthreads) + " threads"
 
     if args.mincoordx is not None and args.mincoordy is not None and args.maxcoordx is not None and args.maxcoordy is not None:
         print "Using min and max coordinates from arguments"
