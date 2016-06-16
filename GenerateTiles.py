@@ -6,6 +6,7 @@ from Queue import *
 
 shutdownRequested = False
 
+# A class storing map tile information
 class TileParams:
     def __init__(self, inMinX, inMinY, inMaxX, inMaxY, inTileSize, inZoom, inPad):
         ring = ogr.Geometry(ogr.wkbLinearRing)
@@ -34,22 +35,17 @@ class TileParams:
     def GetTileSize(self): return self.TileSize
     def GetZoom(self): return self.Zoom
     def GetPad(self): return self.Pad
+    def TextDescription(self): return "Z" + str(self.Zoom) + "[" + str(self.MinX) + "," + str(self.MaxX) + "," + str(self.MinY) + "," + str(self.MaxY) + "]"
 
     def IntersectsArea(self, inExtractArea):
         return inExtractArea.Intersect(self.TileGeometry)
 
-class ThreadedTileGenerator(threading.Thread):
-    def __init__(self, inQueue, inThreadnum, inBasedir, inProjection, inMapnikconfig, inExtractAreaGeom, inFullClipBelowZoom, inFlatDirectoryStructure, inScale):
+# A baseclass which has some common threading operations`
+class BaseThreading(threading.Thread):
+    def __init__(self, inQueue, inThreadnum):
         threading.Thread.__init__(self)
         self.queue = inQueue
         self.threadnum = inThreadnum
-        self.basedir = inBasedir
-        self.projection = inProjection
-        self.mapnikconfig = inMapnikconfig
-        self.extractAreaGeom = inExtractAreaGeom
-        self.fullClipBelowZoom = inFullClipBelowZoom
-        self.flatDirectoryStructure = inFlatDirectoryStructure
-        self.scale = inScale
 
     def run(self):
         while not shutdownRequested:
@@ -57,12 +53,62 @@ class ThreadedTileGenerator(threading.Thread):
             # Blocks, waiting for something to become avialable on the queue. This at the moment can give a NoneType error while the script is in the process of shutting down. Can't figure out how to stop this but it doesn't do any harm as all the queued items are done and the script is terminating.
             item = self.queue.get()
 
-            self.DrawMap(item)
+            self.DoThreadedWork(item)
 
             # Mark the item we have taken off the queue as done so the thread will become available to accept new items
             self.queue.task_done()
 
-    def DrawMap(self, params):
+    def DoThreadedWork(self, queueItem):
+        self.Log("Doing nothing with " + str(queueItem))
+        
+    def Log(self, message):
+        # Prefix all log messages with the thread number and current queue size
+        print "[t" + str(self.threadnum) + ", q" + str(self.queue.qsize()) + "] " + message
+
+# A class which will trim out tiles from a queue if they are outwith the
+# extract area. Pretty much overkill to thread this all.. but maybe a marginal
+# speed up in terms of checking a tile boundary against complex polygons
+class ExtractAreaChecker(BaseThreading):
+
+    lock = threading.Lock()
+    outputQueue = Queue()
+    skippedTiles = 0
+    processedTiles = 0
+
+    def __init__(self, inQueue, inThreadnum, inExtractAreaGeom, inFullClipBelowZoom):
+        self.extractAreaGeom = inExtractAreaGeom
+        self.fullClipBelowZoom = inFullClipBelowZoom
+        super(ExtractAreaChecker, self).__init__(inQueue, inThreadnum)
+
+    def DoThreadedWork(self, params):
+
+        if params.GetZoom() > self.fullClipBelowZoom and not(params.IntersectsArea(extractAreaGeom)):
+            with ExtractAreaChecker.lock:
+                ExtractAreaChecker.skippedTiles += 1
+        else:
+            with ExtractAreaChecker.lock:
+                self.outputQueue.put(params)
+
+        with ExtractAreaChecker.lock:
+            ExtractAreaChecker.processedTiles += 1
+
+    def GetOutputQueue(self): return self.outputQueue
+    def GetSkippedTiles(self): return self.skippedTiles
+    def GetProcessedTiles(self): return self.processedTiles
+
+# The class which will do the map rendering and save the image results
+class ThreadedTileGenerator(BaseThreading):
+    def __init__(self, inQueue, inThreadnum, inBasedir, inProjection, inMapnikconfig, inExtractAreaGeom, inFullClipBelowZoom, inFlatDirectoryStructure, inScale):
+        self.basedir = inBasedir
+        self.projection = inProjection
+        self.mapnikconfig = inMapnikconfig
+        self.extractAreaGeom = inExtractAreaGeom
+        self.fullClipBelowZoom = inFullClipBelowZoom
+        self.flatDirectoryStructure = inFlatDirectoryStructure
+        self.scale = inScale
+        super(ThreadedTileGenerator, self).__init__(inQueue, inThreadnum)
+
+    def DoThreadedWork(self, params):
 
         if self.flatDirectoryStructure:
             xySeparator = "_"
@@ -71,10 +117,7 @@ class ThreadedTileGenerator(threading.Thread):
 
         filename = self.basedir + "/" + str(params.GetZoom()) + "/" + str(params.GetMinX()).zfill(params.GetPad()) + xySeparator + str(params.GetMinY()).zfill(params.GetPad()) + ".png"
 
-        # Create a bounding box for this tile so we can figure out if we should render it
-        if params.GetZoom() > self.fullClipBelowZoom and not(params.IntersectsArea(extractAreaGeom)):
-            self.Log("Skipping tile " + filename + " as outside extract area")
-        elif os.path.isfile(filename):
+        if os.path.isfile(filename):
             self.Log("Skipping file " + filename + " as it already exists")
         else:
             self.Log(filename)
@@ -98,10 +141,6 @@ class ThreadedTileGenerator(threading.Thread):
                 os.makedirs(dirname)
 
             view.save(filename,'png')
-
-    def Log(self, message):
-        # Prefix all log messages with the thread number and current queue size
-        print "[t" + str(self.threadnum) + ", q" + str(self.queue.qsize()) + "] " + message
 
 try:
     parser = argparse.ArgumentParser(description='A script to generate OSM tiles in a specific coordinate system')
@@ -178,11 +217,13 @@ try:
         x = mincoords[0]
         y = mincoords[1]
 
+        print "About to look for tiles which can be skipped based on any extents specified..."
 
+        #for i in range(1):
         for i in range(numthreads):
-            t = ThreadedTileGenerator(queue, i, basedir, projection, mapnikconfig, extractAreaGeom, fullClipBelowZoom, flatDirectoryStructure, scale)
-            t.daemon = True
-            t.start()
+            extractAreaChecker = ExtractAreaChecker(queue, i, extractAreaGeom, fullClipBelowZoom)
+            extractAreaChecker.daemon = True
+            extractAreaChecker.start()
 
         while (y < maxcoords[1]):
             while (x < maxcoords[0]):
@@ -198,6 +239,19 @@ try:
 
         # Blocks until all items in the queue are processed
         queue.join()
+
+        print "...done, skipped " + str(extractAreaChecker.GetSkippedTiles()) + " out of " + str(extractAreaChecker.GetProcessedTiles()) + " processed"
+
+        renderQueue = extractAreaChecker.GetOutputQueue()
+
+        for i in range(numthreads):
+            t = ThreadedTileGenerator(renderQueue, i, basedir, projection, mapnikconfig, extractAreaGeom, fullClipBelowZoom, flatDirectoryStructure, scale)
+            t.daemon = True
+            t.start()
+
+        # Blocks until all items in the queue are processed
+        renderQueue.join()
+
 except KeyboardInterrupt:
     print "Requesting threads to shutdown..."
     shutdownRequested = True
