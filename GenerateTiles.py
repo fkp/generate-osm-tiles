@@ -186,10 +186,12 @@ try:
         mincoords = args.mincoordx, args.mincoordy
         maxcoords = args.maxcoordx, args.maxcoordy
     else:
-        print "Deriving min and max coordinates from extract area extent"
+        print "Deriving min and max coordinates from extract area extent" + str(extractAreaGeom.GetEnvelope())
         extractAreaEnvelope = extractAreaGeom.GetEnvelope()
         mincoords = (int(extractAreaEnvelope[0]), int(extractAreaEnvelope[2]))
         maxcoords = (int(extractAreaEnvelope[1])+1, int(extractAreaEnvelope[3])+1)
+        print "Min coords" + str(mincoords)
+        print "Max coords" + str(maxcoords)
 
     if args.basedir is not None:
         basedir = args.basedir
