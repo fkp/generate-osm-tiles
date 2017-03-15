@@ -115,7 +115,7 @@ class ThreadedTileGenerator(BaseThreading):
         else:
             xySeparator = "/"
 
-        filename = self.basedir + "/" + str(params.GetZoom()) + "/" + str(params.GetMinX()).zfill(params.GetPad()) + xySeparator + str(params.GetMinY()).zfill(params.GetPad()) + ".png"
+        filename = self.basedir + "/" + str(params.GetZoom()) + "/" + self.PadCoordinates(params.GetPad(), params.GetMinX()) + xySeparator + self.PadCoordinates(params.GetPad(), params.GetMinY()) + ".png"
 
         if os.path.isfile(filename):
             self.Log("Skipping file " + filename + " as it already exists")
@@ -141,6 +141,14 @@ class ThreadedTileGenerator(BaseThreading):
                 os.makedirs(dirname)
 
             view.save(filename,'png')
+
+    # Want to pad the coordinates to the same number of digits excluding
+    # a minux sign
+    def PadCoordinates(self, pad, coordinate):
+        if  coordinate < 0:
+            return str(coordinate).zfill(pad+1)
+        else:
+            return str(coordinate).zfill(pad)
 
 try:
     parser = argparse.ArgumentParser(description='A script to generate OSM tiles in a specific coordinate system')
