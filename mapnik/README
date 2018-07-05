@@ -1,0 +1,4 @@
+The osm_xxxx.xml files in this directory want to be used in the shared area which the tile server normally uses so suggested that a symbolic link is created in here:
+/etc/mapnik-osm-carto-data/
+
+prior to running the script to render the data, which will typically refer to the script in this location (so relative paths to symbols for rendering work as expected).
